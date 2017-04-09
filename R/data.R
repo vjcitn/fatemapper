@@ -1,4 +1,5 @@
 #' PP: Wu et al. PNAS 2016 principal patterns
+#' @importFrom utils data
 #' @format data.frame (405 x 21)
 #' @note see template405
 #' @source \url{http://www.pnas.org/content/113/16/4290.full} supplements

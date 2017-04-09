@@ -1,4 +1,5 @@
 #' take an estimated basis vector from NMF and format to template tmpl
+#' @importFrom grDevices chull terrain.colors
 #' @param x numerical vector, in the drosmap application, has length 405 representing points in the blastocyst model ellipse
 #' @param nr number of rows of output matrix
 #' @param nc number of columns of output matrix
@@ -12,7 +13,7 @@
 #' contour(t(mm)) # first principal pattern using naive NMF
 #' @export
 matit = function(x, nr=16, nc=32, tmpl) {
- tmp = matrix(0, nr=nr, nc=nc)
+ tmp = matrix(0, nrow=nr, ncol=nc)
  tmp[tmpl>0] = x
  tmp
 }

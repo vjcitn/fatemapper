@@ -1,4 +1,8 @@
 #' use ggplot to render an image of a Drosophila blastocyst
+#' @import ggplot2
+#' @import shiny
+#' @importFrom graphics barplot plot polygon text
+#' @importFrom stats median
 #' @param basis matrix of basis vectors for a reexpression of the spatial expression matrix
 #' @param threshold numerical lower bound on basis elements to be included when convex hulls of points forming principal patterns are computed
 #' @param template matrix of 0 and 1, 1 indicating which parts of image rectangle are represented in the basis
