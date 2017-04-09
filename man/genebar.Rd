@@ -10,6 +10,8 @@ genebar(ppind = 1, depth = 30, coefdata)
 \item{ppind}{principal pattern number: row index for 'sPPcoefGenes' to display}
 
 \item{depth}{number of coefficients (starting at largest) to display}
+
+\item{coefdata}{a data.frame with coefficients for genes}
 }
 \description{
 use a barplot to depict gene-oriented coefficients of a principal pattern

@@ -13,6 +13,8 @@ ggBlast(basis, threshold = 3, template, peel = 0, ...)
 
 \item{template}{matrix of 0 and 1, 1 indicating which parts of image rectangle are represented in the basis}
 
+\item{peel}{numeric depth of convex hull peeling, default is 0}
+
 \item{\dots}{not used}
 }
 \description{
