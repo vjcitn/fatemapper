@@ -1,10 +1,12 @@
 Package: fatemapper
 Title: tools for working with cell fate maps
-Version: 0.0.6
+Version: 0.0.7
 Author: VJ Carey <stvjc@channing.harvard.edu>
 Description: fruitfly cell fate map from NMF on spatial expression matrix
-Depends: NMF, shiny, grid, png, ggplot2
+Depends: NMF, shiny, grid, png, ggplot2, 
+Suggests: knitr, rmarkdown, BiocStyle
 Maintainer: VJ Carey <stvjc@channing.harvard.edu>
+VignetteBuilder: knitr
 License: Artistic-2.0
 LazyLoad: yes
 BiocViews: Visualization
