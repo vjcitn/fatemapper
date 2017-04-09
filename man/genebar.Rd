@@ -4,7 +4,7 @@
 \alias{genebar}
 \title{use a barplot to depict gene-oriented coefficients of a principal pattern}
 \usage{
-genebar(ppind = 1, depth = 30)
+genebar(ppind = 1, depth = 30, coefdata)
 }
 \arguments{
 \item{ppind}{principal pattern number: row index for 'sPPcoefGenes' to display}
