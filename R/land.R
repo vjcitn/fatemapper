@@ -1,4 +1,5 @@
-
+#' produce a data.frame with approximate landmarks of structures from Campos-Ortega and Hartenstein 1986 for the 405 point elliptical template
+#' @export
 DmLandmarks = function() {
 landmarks = c(am=19, as=270, C3d=111, cl=22,
      dEpi=177, dr=113, es=9, ms=250, ol=56, ph=49,

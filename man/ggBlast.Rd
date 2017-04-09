@@ -4,7 +4,7 @@
 \alias{ggBlast}
 \title{use ggplot to render an image of a Drosophila blastocyst}
 \usage{
-ggBlast(basis, threshold = 3, template, ...)
+ggBlast(basis, threshold = 3, template, peel = 0, ...)
 }
 \arguments{
 \item{basis}{matrix of basis vectors for a reexpression of the spatial expression matrix}

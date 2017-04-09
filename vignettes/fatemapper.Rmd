@@ -1,0 +1,196 @@
+---
+title: "fatemapper -- integrating ontology, cell fate maps and genomic assays with Bioconductor"
+author: "Vincent J. Carey, stvjc at channing.harvard.edu"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{fatemapper -- integrating ontology, cell fate maps and genomic assays with Bioconductor}
+  %\VignetteEncoding{UTF-8}
+output:
+  BiocStyle::pdf_document2:
+    toc: no
+    number_sections: yes
+  BiocStyle::html_document2:
+    highlight: pygments
+    number_sections: yes
+    theme: united
+    toc: yes
+bibliography: fatemapper.bib
+---
+
+```{r setup,echo=FALSE,results="hide"}
+suppressPackageStartupMessages({
+library(knitr)
+library(grid)
+library(png)
+library(fatemapper)
+})
+```
+
+# Introduction
+
+Biological understanding
+of cell differentiation during development in
+model organisms is growing but incomplete.
+Considerable energy is devoted to using genome-scale
+assays to fill gaps in knowledge.
+
+Schematics
+of a 'cell fate map' of *Drosophila melanogaster*
+(hosted by the
+[Society for Developmental Biology](http://www.sdbonline.org/sites/FLY/atlas/5fate.htm)) are provided in Figure \@ref(fig:fig1).  Labels on
+subregions of the map describe anatomical structures that will
+develop from the cells in the subregion.
+
+```{r fig1,fig.cap="Planimetric schematic of Drosophila blastoderm.  Fate symbol table in Table 1.",echo=FALSE,fig.height=3.8,fig.scap=NA}
+im = readPNG(system.file("pngs/fate-map.png", package="fatemapper"))
+grid.raster(im)
+```
+
+```{r tab1,echo=FALSE}
+data(planiTerms)
+kable(planiTerms, caption="Terms abbreviated in Figure 1.")
+```
+
+The purpose of this package is to lay a groundwork for
+integration of Bioconductor
+data structures for genomic assays
+and genomic annotation with information on anatomical role
+and cell/organ/organism development to help refine molecular-level
+understanding of cell differentiation and organ development.
+The Berkeley Drosophila Genome
+Project 
+provides [information on
+systematic annotation of stages
+of fly development](http://insitu.fruitfly.org/cgi-bin/ex/insitu.pl?t=html&p=annotation).
+This package makes use of resources in this project, inspired
+by the PNAS paper of @Wu2016.
+
+# Statistical learning of gene expression patterns underlying cell fate
+
+## Background
+
+@Wu2016 describe how spatially organized data on gene expression
+patterns can be analyzed to identify "principal patterns"
+that align meaningfully with fate map regions.
+Given measures of expression intensity at $M$ locations for $G$
+genes, the $M \times G$ expression matrix $X$ is approximated
+as the product of a "pattern dictionary" $D \geq 0$ (elementwise) and a coefficient
+matrix $A \geq 0$ for with $||X - DA||_F$ is small, with $||\cdot||_F$
+denoting the Frobenius norm.  Two basic problems of application
+of this idea are (a) obtaining criteria for limiting the complexity
+of the dictionary $D$, and (b) using the patterns identified in $D$, with
+feature coefficients estimated in $A$,
+to enhance biological knowledge.  Problem (a) is primarily
+a problem of statistical model selection, and problem (b) is a problem
+of integrating model parameter interpretation with
+biological theory and knowledge.
+
+## A view of the Wu et al. dictionary
+
+The fatemapper package includes a representation of the 
+principal patterns identified by @Wu2016, and a function,
+`ggBlast`, that renders aspects of this model.  See
+Figure \@ref(fig:doviz1) for a display using landmarks
+defined in @campos2013embryonic, and placed approximately
+"by eye" on the digital template for the blastoderm.
+The landmark symbols used here are decoded in Table \@ref(tab:tab2).
+
+```{r doviz1,fig=TRUE,echo=FALSE,fig.height=3,fig.cap="A rendering of Wu et al(2016) dictionary.  Colored polygons are obtained as convex hulls of regions defined by setting to zero all estimated basis elements with values less than 0.5.",fig.scap=NA}
+data(PP)
+data(template405)
+PPmat = data.matrix(PP)
+blanken = function() theme(axis.ticks.y=element_blank(),axis.text.y=element_blank(), axis.ticks.x=element_blank(), axis.text.x=element_blank())
+ggBlast(PPmat, thresh=.5, template=template405) + xlab("<-- anterior") + ylab("dorsal -->") + blanken() + geom_text(data=DmLandmarks(), aes(x=x,y=y,label=landm))
+```
+
+```{r tab2,echo=FALSE}
+data(dmMapTerms)
+kable(dmMapTerms, caption="Terms abbreviated in Figure 2.")
+```
+
+# Computational underpinnings of `ggBlast` and `CFMexplorer`
+
+In this section we review basic components of
+the fatemapper package leading to Figure \@ref(fig:doviz1).
+
+## Expression patterns
+
+The gene expression data are derived through registration
+and digitization of images of the Berkeley Drosophila Genome
+Project.  An [excel spreadsheet](http://www.pnas.org/content/suppl/2016/04/05/1521171113.DCSupplemental/pnas.1521171113.sd01.xlsx) is used to
+create the data.frame 'expressionPatterns' in the fatemapper package, which has
+405 rows corresponding to a linearization of the blastoderm
+ellipse, and 1640 columns representing unevenly replicated
+data on 701 unique genes exhibiting
+spatially restricted expression patterns in the blastoderm.
+A small excerpt:
+
+```{r lkpp,echo=FALSE}
+data(expressionPatterns)
+kable(expressionPatterns[1:4,1:5])
+```
+
+## Linearization of blastoderm space
+
+Utilities are provided to map the 405 rows to positions
+in an elliptical template for the blastoderm.
+
+```{r plpl,fig=TRUE,echo=FALSE}
+mnum = matit(1:405, tmpl=template405)[16:1,]
+gnum = getXY(t(mnum), threshold=0)
+plot(gnum[,1], gnum[,2], pch=" ", xlab="<-- anterior",
+   ylab="dorsal -->")
+text(gnum[,1], gnum[,2], gnum[,3], cex=.5)
+```
+
+This can be used to verify that the numerical representation
+of the expression patterns 
+agree with observed spatial patterns.
+
+```{r dovr,fig=TRUE,fig.cap="Contours of expression intensity for hbn.",
+  fig.height=3}
+vizRestriction(expressionPatterns, "hbn", threshold=.1)
+```
+This can be checked against the [BDGP set of images for hbn](
+http://insitu.fruitfly.org/cgi-bin/ex/report.pl?ftype=1&ftext=FBgn0008636).
+For this gene, the qualitative agreement is reasonable.
+
+## The Wu et al. (2016) dictionary
+
+The pattern "dictionary" presented by @Wu2016
+has 21 principal patterns that summarize
+coordinated variation in gene expression over
+the blastoderm.  We can use 'vizRestriction'
+to sketch the region of the blastoderm
+occupied by a principal pattern.
+
+```{r dovr2,fig=TRUE,fig.cap="First principal pattern.", fig.height=3}
+vizRestriction(PP, "PP1", threshold=.1)
+```
+
+The coefficients estimated for genes contributing
+to principal patterns are available in 
+'sPPcoefGenes'.  We can visualize the relative
+magnitudes of contributions from genes to a
+principal pattern using 'genebar'.
+
+```{r lkgb,fig=TRUE,echo=FALSE,fig.cap="Contributions to first principal pattern.", fig.height=3}
+data(sPPcoefGenes)
+genebar(1, 20, sPPcoefGenes)
+```
+
+## An interactive tool
+
+The function 'CFMexplorer' starts a shiny app that
+allows alteration in the thresholding leading to 
+subregion formation in the ggBlast visualization.
+An independently generated NMF analysis of the expression
+data into 21 principal patterns is available as 'exNmf21'.
+Additional dictionaries with larger or smaller pattern
+sets can be generated and viewed easily through this app.
+
+# Ontological reasoning about principal patterns
+
+
+# References
