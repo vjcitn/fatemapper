@@ -56,9 +56,6 @@ for (i in 1:ncol(bas))  try({
 
 
 #' Shiny app for interactive visualization of expression patterns related to cell fate map
-#' @param basis The basis component of a factorization of the spatial expression matrix
-#' @param init initial value for thresholding slider
-#' @param template matrix of 0 and 1, 1 indicating which parts of image rectangle are represented in the basis
 #' @note A spatial expression matrix has rows corresponding to a mapping of a grid, 
 #' and columns corresponding to a gene; see \code{data(expressionPatterns)} 
 #' for an example.  A reexpression of such a matrix using non-negative matrix
@@ -67,44 +64,79 @@ for (i in 1:ncol(bas))  try({
 #' matrix of this factorization yields what Wu et al. call 'principal patterns'.
 #' To visualize these patterns in the context of the cell fate map, we take
 #' the convex hulls of points having pattern weights exceeding a given
-#' threshold.
+#' threshold.  There are three different basis sets offered:
+#' Wu's distribution through supplemental data for the PNAS paper,
+#' a direct computation of a rank 21 NMF from the expressionPatterns,
+#' and a direct computation of a rank 30 NMF from the same data.
 #' @export
-CFMexplorer = function(basis, init=3, template) {
- basn = as.numeric(basis)
- low = round(min(as.numeric(basis), na.rm=TRUE),2)
- hi = round(max(as.numeric(basis), na.rm=TRUE),2)
- med = round(median(as.numeric(basis), na.rm=TRUE),2)
- if (is.null(init)) init=med
+CFMexplorer = function() {
+ data(PP)
+ PPmat = data.matrix(PP)
+ data(exNmf21)
+ bas21 = basis(exNmf21)
+ data(exNmf30)
+ bas30 = basis(exNmf30)
+ data(template405)
+ data(dmMapTerms)
  ui = fluidPage(
         sidebarPanel(
          helpText("Interactive Cell Fate Model explorer"),
          helpText(" "), 
          helpText("Inspired by ",a(href='http://www.pnas.org/content/113/16/4290.full',"Wu et al. PNAS 2016")), 
+         helpText(" "),
+         radioButtons("basisChoice", "Pattern Dict.",
+            choices=c("Wu et al. rank=21", "Raw rank=21", "Raw rank=30"), 
+            selected="Wu et al. rank=21"),
          helpText(" "), 
          helpText("Choose threshold for NMF basis element inclusion, for construction of convex hulls"),
-         sliderInput("inThresh", "threshold", min=low, max=hi, value=init),
+         uiOutput("moreControls"),
          helpText(" "),
-         checkboxInput("pickLand", "Add landmarks"),
+         checkboxInput("pickLand", "Add landmarks", value=TRUE),
          helpText(" "),
          helpText("Select depth of convex hull peeling"),
-         numericInput("peel", " ", 0L, min=0L, max=2, step=1L)
+         numericInput("peel", " ", 0L, min=0L, max=2, step=1L), width=2
         ),  
         mainPanel(
          tabsetPanel(
           tabPanel("chulls", plotOutput("ggpatt")),
-          tabPanel("classic", plotOutput("ggpatt2"))
+          tabPanel("classic", plotOutput("ggpatt2")),
+          tabPanel("landmarks", dataTableOutput("dmterms"))
          )   
         )   
        )   
  server = function(input, output, session) {
    im = readPNG(system.file("pngs/springmap1.png", package="fatemapper"))
    output$ggpatt = renderPlot({
+      if (!is.null(input$inThresh)) {
+           if (input$basisChoice == "Wu et al. rank=21")
+                 basis=PPmat
+           else if (input$basisChoice== "Raw rank=21")
+                 basis=bas21
+           else if (input$basisChoice== "Raw rank=30")
+                 basis=bas30
            view = ggBlast(basis, threshold=input$inThresh, 
-                  template=template, peel=input$peel)
+                  template=template405, peel=input$peel)
            if (input$pickLand) view = view + geom_text(data=DmLandmarks(),
-                 aes(x=x,y=y,label=landm))
+                 aes(x=x,y=y,label=landm), size=5)
            print(view)
+       }
    })
+   output$moreControls <- renderUI({
+           if (input$basisChoice == "Wu et al. rank=21")
+                 { basis=PPmat; theval = 0.5 } # empirical
+           else if (input$basisChoice== "Raw rank=21")
+                 { basis=bas21; theval = 2; themax = 8 }
+           else if (input$basisChoice== "Raw rank=30")
+                 { basis=bas30; theval = 2; themax = 8 }
+           anb = as.numeric(basis)
+           anbp = anb[anb>0]
+           themax = max(as.numeric(basis),na.rm=TRUE)
+           themed = median(anbp)
+         tagList(
+           sliderInput("inThresh", "threshold", min=0, max=themax, value=theval, step=.01)
+         )
+       })
+   output$dmterms = renderDataTable( dmMapTerms )
    output$ggpatt2 = renderPlot({
      grid.raster(im)
      })

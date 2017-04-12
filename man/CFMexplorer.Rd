@@ -4,14 +4,7 @@
 \alias{CFMexplorer}
 \title{Shiny app for interactive visualization of expression patterns related to cell fate map}
 \usage{
-CFMexplorer(basis, init = 3, template)
-}
-\arguments{
-\item{basis}{The basis component of a factorization of the spatial expression matrix}
-
-\item{init}{initial value for thresholding slider}
-
-\item{template}{matrix of 0 and 1, 1 indicating which parts of image rectangle are represented in the basis}
+CFMexplorer()
 }
 \description{
 Shiny app for interactive visualization of expression patterns related to cell fate map
@@ -25,5 +18,8 @@ PNAS, 2016 \url{http://www.pnas.org/content/113/16/4290.full}.  The basis
 matrix of this factorization yields what Wu et al. call 'principal patterns'.
 To visualize these patterns in the context of the cell fate map, we take
 the convex hulls of points having pattern weights exceeding a given
-threshold.
+threshold.  There are three different basis sets offered:
+Wu's distribution through supplemental data for the PNAS paper,
+a direct computation of a rank 21 NMF from the expressionPatterns,
+and a direct computation of a rank 30 NMF from the same data.
 }
